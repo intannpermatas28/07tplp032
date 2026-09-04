@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistik Tanggapan Masyarakat: Fenomena Pocong Tangsel</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            900: '#14532d',
+                        },
+                        ghost: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Leaflet CSS & JS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(51, 65, 85, 0.8);
+            border-radius: 4px;
+        }
+        .glow-effect {
+            box-shadow: 0 0 25px -5px rgba(34, 197, 94, 0.25);
+        }
+        .ghost-glow {
+            box-shadow: 0 0 30px -5px rgba(168, 85, 247, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-ghost-950 text-slate-100 min-h-screen flex flex-col custom-scrollbar">
+
+    <nav class="border-b border-slate-800 bg-ghost-900/80 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-emerald-500 flex items-center justify-center text-white shadow-lg glow-effect">
+                    <i class="fa-solid font-ghost text-xl fa-ghost"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight tracking-tight text-white flex items-center gap-2">
+                        Pocong Analytics <span class="bg-purple-900/60 text-purple-300 border border-purple-500/30 text-[10px] px-2 py-0.5 rounded-full uppercase font-semibold">Tangsel Region</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Monitoring & Analisis Tanggapan Masyarakat Tangerang Selatan</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <button id="openApiModalBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-3.5 py-2 rounded-lg border border-slate-700 flex items-center gap-2 transition duration-200">
+                    <i class="fa-solid fa-key text-emerald-400"></i>
+                    <span class="hidden sm:inline">Apify Config</span>
+                </button>
+                <button id="aiAnalyzeBtn" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs px-4 py-2 rounded-lg font-medium flex items-center gap-2 shadow-lg transition duration-200">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Analisis AI Gemini</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Top Banner & Filters -->
+        <div class="bg-gradient-to-r from-slate-900 via-purple-950/40 to-slate-900 rounded-2xl p-5 border border-purple-900/30 relative overflow-hidden ghost-glow">
+            <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl pointer-events-none text-purple-400">
+                <i class="fa-solid fa-ghost"></i>
+            </div>
+            
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                <div>
+                    <span class="inline-flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-medium mb-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Data Realtime / Synthetic Apify API
+                    </span>
+                    <h2 class="text-2xl font-bold text-white">Dashboard Sentimen & Opini Publik</h2>
+                    <p class="text-sm text-slate-400 mt-0.5">Analisis tren tanggapan isu penampakan pocong di wilayah Tangerang Selatan.</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 bg-slate-900/80 p-2 rounded-xl border border-slate-800">
+                    <!-- Platform Filter -->
+                    <select id="filterPlatform" class="bg-slate-800 text-slate-200 text-xs px-3 py-2 rounded-lg border border-slate-700 focus:outline-none focus:border-purple-500">
+                        <option value="ALL">Semua Platform</option>
+                        <option value="TikTok">TikTok</option>
+                        <option value="X (Twitter)">X / Twitter</option>
+                        <option value="Instagram">Instagram</option>
+                        <option value="Facebook">Facebook</option>
+                    </select>
+
+                    <!-- Sentiment Filter -->
+                    <select id="filterSentiment" class="bg-slate-800 text-slate-200 text-xs px-3 py-2 rounded-lg border border-slate-700 focus:outline-none focus:border-purple-500">
+                        <option value="ALL">Semua Sentimen</option>
+                        <option value="Resah / Takut">Resah / Takut</option>
+                        <option value="Skeptis / Lucu">Skeptis / Lucu</option>
+                        <option value="Penasaran / Investigatif">Penasaran</option>
+                        <option value="Geram / Marah">Geram / Resah Prank</option>
+                    </select>
+
+                    <!-- District Filter -->
+                    <select id="filterDistrict" class="bg-slate-800 text-slate-200 text-xs px-3 py-2 rounded-lg border border-slate-700 focus:outline-none focus:border-purple-500">
+                        <option value="ALL">Semua Kecamatan Tangsel</option>
+                        <option value="Pamulang">Pamulang</option>
+                        <option value="Serpong">Serpong</option>
+                        <option value="Serpong Utara">Serpong Utara</option>
+                        <option value="Ciputat">Ciputat</option>
+                        <option value="Ciputat Timur">Ciputat Timur</option>
+                        <option value="Pondok Aren">Pondok Aren</option>
+                        <option value="Setu">Setu</option>
+                    </select>
+
+                    <button id="resetFiltersBtn" title="Reset Filter" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded-lg border border-slate-700">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Total Posts -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-400 font-medium">Total Tanggapan</p>
+                    <h3 id="kpiTotalPosts" class="text-2xl font-bold text-white mt-1">0</h3>
+                    <p class="text-[10px] text-emerald-400 mt-1"><i class="fa-solid fa-database"></i> Terkumpul dari Apify</p>
+                </div>
+                <div class="w-11 h-11 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-comments"></i>
+                </div>
+            </div>
+
+            <!-- Dominant Sentiment -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-400 font-medium">Sentimen Dominan</p>
+                    <h3 id="kpiDominantSentiment" class="text-lg font-bold text-amber-400 mt-1">-</h3>
+                    <p id="kpiSentimentSub" class="text-[10px] text-slate-400 mt-1">Masyarakat Tangsel</p>
+                </div>
+                <div class="w-11 h-11 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-face-flushed"></i>
+                </div>
+            </div>
+
+            <!-- Hotspot Location -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-400 font-medium">Kecamatan Teramai</p>
+                    <h3 id="kpiHotspotDistrict" class="text-lg font-bold text-purple-400 mt-1">-</h3>
+                    <p class="text-[10px] text-slate-400 mt-1">Pusat Diskusi Terbanyak</p>
+                </div>
+                <div class="w-11 h-11 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                </div>
+            </div>
+
+            <!-- Virality & Engagement -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-slate-400 font-medium">Total Engagement</p>
+                    <h3 id="kpiEngagement" class="text-2xl font-bold text-emerald-400 mt-1">0</h3>
+                    <p class="text-[10px] text-slate-400 mt-1">Likes, Shares & Comments</p>
+                </div>
+                <div class="w-11 h-11 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Sentiment Pie Chart -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-slate-100 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-purple-400"></i> Distribusi Sentimen Publik
+                    </h3>
+                    <span class="text-[11px] text-slate-400">Persentase (%)</span>
+                </div>
+                <div class="relative w-full h-60 flex items-center justify-center">
+                    <canvas id="sentimentPieChart"></canvas>
+                </div>
+                <div id="sentimentLegend" class="grid grid-cols-2 gap-2 mt-4 text-xs text-slate-300">
+                    <!-- Legend dynamic insert -->
+                </div>
+            </div>
+
+            <!-- District Bar Chart -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between lg:col-span-2">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-slate-100 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-city text-emerald-400"></i> Tanggapan Per Kecamatan (Tangsel)
+                    </h3>
+                    <span class="text-[11px] text-slate-400">Jumlah Postingan & Komentar</span>
+                </div>
+                <div class="relative w-full h-64">
+                    <canvas id="districtBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Tangsel Geographic Map -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 lg:col-span-2 flex flex-col">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 class="font-bold text-slate-100 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-map text-amber-400"></i> Peta Perubahan Opini Wilayah Tangerang Selatan
+                        </h3>
+                        <p class="text-xs text-slate-400">Klik marker kecamatan untuk melihat rincian persebaran tanggapan</p>
+                    </div>
+                    <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-md border border-slate-700">7 Kecamatan</span>
+                </div>
+                <div id="tangselMap" class="w-full h-80 rounded-xl overflow-hidden border border-slate-800"></div>
+            </div>
+
+            <!-- Platform & Sentiment Trend Line -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-bold text-slate-100 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-share-nodes text-blue-400"></i> Persebaran Platform Media
+                        </h3>
+                    </div>
+                    <div class="relative w-full h-44 mb-4">
+                        <canvas id="platformDoughnutChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-800 pt-3">
+                    <h4 class="text-xs font-semibold text-slate-300 mb-2">Platform Terpopuler Pembahasan:</h4>
+                    <div id="platformList" class="space-y-2 text-xs">
+                        <!-- Dynamic list -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="aiAnalysisContainer" class="bg-gradient-to-br from-purple-950/60 via-slate-900 to-indigo-950/50 border border-purple-500/30 rounded-2xl p-5 hidden transition-all duration-300">
+            <div class="flex items-center justify-between mb-4 border-b border-purple-800/40 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-purple-600/30 text-purple-300 border border-purple-500/40 flex items-center justify-center">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-base">Analisis Kecerdasan Buatan (Gemini AI Insights)</h3>
+                        <p class="text-xs text-purple-300">Rangkuman narasi sosial, persepsi psikologis warga Tangsel & analisis dampak keamanan</p>
+                    </div>
+                </div>
+                <button id="closeAiAnalysisBtn" class="text-slate-400 hover:text-white text-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="aiAnalysisLoading" class="hidden flex-col items-center justify-center py-8 space-y-3">
+                <div class="w-10 h-10 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"></div>
+                <p class="text-xs text-purple-300 font-medium">Menganalisis pola sentimen dan tanggapan isu pocong Tangsel...</p>
+            </div>
+
+            <div id="aiAnalysisResult" class="text-sm text-slate-200 leading-relaxed space-y-3">
+                <!-- AI Output Content inserted here -->
+            </div>
+
+            <!-- Interactive AI Chat Question -->
+            <div class="mt-4 pt-4 border-t border-purple-800/30 flex items-center gap-2">
+                <input type="text" id="aiCustomQuery" placeholder="Tanyakan hal spesifik (misal: 'Apakah warga Pamulang lebih dominan takut atau hanya becanda?')" class="flex-grow bg-slate-950/80 text-xs text-slate-200 border border-purple-900/50 rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-purple-500">
+                <button id="sendAiQueryBtn" class="bg-purple-600 hover:bg-purple-500 text-white text-xs px-4 py-2.5 rounded-xl font-medium transition">
+                    <i class="fa-solid fa-paper-plane mr-1"></i> Tanya
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h3 class="font-bold text-slate-100 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-table-list text-emerald-400"></i> Rincian Data Scraping Tanggapan Warga
+                    </h3>
+                    <p class="text-xs text-slate-400">Data postingan & komentar isu pocong Tangerang Selatan</p>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
+                        <input type="text" id="searchTableInput" placeholder="Cari kata kunci / komentar..." class="bg-slate-800 text-slate-200 text-xs pl-8 pr-3 py-2 rounded-lg border border-slate-700 focus:outline-none focus:border-emerald-500 w-48 sm:w-64">
+                    </div>
+
+                    <button id="exportCsvBtn" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 text-xs px-3 py-2 rounded-lg border border-emerald-500/30 flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-download"></i> <span class="hidden sm:inline">Export CSV</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-800">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-950 text-slate-400 text-[11px] uppercase tracking-wider border-b border-slate-800">
+                            <th class="py-3 px-4">Pengguna / Platform</th>
+                            <th class="py-3 px-4">Kecamatan</th>
+                            <th class="py-3 px-4">Komentar / Tanggapan</th>
+                            <th class="py-3 px-4">Sentimen</th>
+                            <th class="py-3 px-4">Engagement</th>
+                            <th class="py-3 px-4">Tanggal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody" class="divide-y divide-slate-800/60 text-xs text-slate-300">
+                        <!-- Data rows inserted dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table Pagination Controls -->
+            <div class="flex items-center justify-between text-xs text-slate-400 pt-2">
+                <span id="paginationInfo">Menampilkan 0 dari 0 data</span>
+                <div class="flex items-center space-x-1" id="paginationControls">
+                    <!-- Dynamic page buttons -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="apifyModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-white text-base flex items-center gap-2">
+                    <i class="fa-solid fa-plug text-emerald-400"></i> Pengaturan Integrasi Apify API
+                </h3>
+                <button id="closeApiModalBtn" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Apify API Token</label>
+                    <input type="text" id="apifyTokenInput" value="apify_api_LWBnBSP4QDcRfrhPf9t4AN3slLlk" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
+                    <p class="text-[10px] text-slate-400 mt-1">Token API default sudah terpasang dari permintaan Anda.</p>
+                </div>
+
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Apify Dataset ID / Actor Run ID</label>
+                    <input type="text" id="apifyDatasetIdInput" placeholder="Contoh: 8kLwXp9qRtZ..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
+                    <p class="text-[10px] text-slate-400 mt-1">Masukkan Dataset ID dari hasil run scraping TikTok / Twitter / Instagram Anda di Apify.</p>
+                </div>
+
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/50 space-y-1">
+                    <p class="font-semibold text-slate-200">Catatan Penggunaan:</p>
+                    <p class="text-slate-400">Jika Dataset ID diisi, aplikasi akan melakukan `fetch` data riil langsung dari Apify Cloud API. Jika dikosongkan, aplikasi akan memakai dataset simulasi komprehensif isu Pocong Tangsel.</p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+                <button id="usePresetDatasetBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-3 py-2 rounded-lg border border-slate-700">
+                    Gunakan Data Demo Tangsel
+                </button>
+                <button id="fetchApifyBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-4 py-2 rounded-lg font-medium flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> Ambil Data Apify
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <script>
+        const SAMPLE_TANGSEL_DATA = [
+            { id: "p1", platform: "TikTok", user: "@pamulang_vibe", kecamatan: "Pamulang", text: "Semalem lewat TPU Pamulang Barat jam 12 malam berasa ada yang ngeliatin di atas pohon pisang, rumor pocong lagi viral banget sih ini bikin merinding!", sentiment: "Resah / Takut", engagement: 1420, date: "2026-02-28" },
+            { id: "p2", platform: "TikTok", user: "@seputar_tangsel", kecamatan: "Pamulang", text: "Klarifikasi gaes, yang heboh pocong berdiri di dekat gapura Pamulang ternyata cuma prank bocah pakai mukena bekas. Polsek Pamulang udah turun tangan.", sentiment: "Skeptis / Lucu", engagement: 3890, date: "2026-03-01" },
+            { id: "p3", platform: "X (Twitter)", user: "@tangsel_foodie", kecamatan: "Serpong", text: "Bukannya takut malah kasihan, jaman serba mahal begini pocongnya kalah saing sama biaya hidup Serpong haha #pocongtangsel", sentiment: "Skeptis / Lucu", engagement: 820, date: "2026-03-01" },
+            { id: "p4", platform: "Instagram", user: "@warga_ciputat", kecamatan: "Ciputat", text: "Tolong Satpol PP Tangsel patroli di daerah Sasak Tinggi Ciputat, rumor pocong bikin ronda warga jadi was-was malam hari.", sentiment: "Resah / Takut", engagement: 540, date: "2026-03-02" },
+            { id: "p5", platform: "X (Twitter)", user: "@serpong_news", kecamatan: "Serpong", text: "Laporan warga terkait dugaan penampakan pocong di BSD Serpong setelah dicek cctv komplek cuma patung spanduk jualan yang tertiup angin.", sentiment: "Skeptis / Lucu", engagement: 1250, date: "2026-03-02" },
+            { id: "p6", platform: "TikTok", user: "@warga_pondokaren", kecamatan: "Pondok Aren", text: "Penasaran banget pengen investigasi langsung ke lokasi dekat Bintaro sektor 9 yang katanya ada pocong loncat-loncat.", sentiment: "Penasaran / Investigatif", engagement: 2100, date: "2026-03-02" },
+            { id: "p7", platform: "Facebook", user: "@Komunitas_Tangsel", kecamatan: "Ciputat Timur", text: "Geram banget sama oknum kreator konten yang bikin prank pocong malam-malam, bikin pengendara motor kaget bisa celaka!", sentiment: "Geram / Marah", engagement: 980, date: "2026-03-03" },
+            { id: "p8", platform: "TikTok", user: "@deni_serpong", kecamatan: "Serpong Utara", text: "Jujur gara-gara postingan pocong di TikTok jadi takut keluar beli nasi goreng malam-malam di Serpong Utara.", sentiment: "Resah / Takut", engagement: 430, date: "2026-03-03" },
+            { id: "p9", platform: "Instagram", user: "@info_setu_tangsel", kecamatan: "Setu", text: "Kawasan Setu dekat puspiptek terpantau kondusif. Warga himbau jangan gampang percaya kabar burung pocong sebelum ada bukti video valid.", sentiment: "Penasaran / Investigatif", engagement: 670, date: "2026-03-03" },
+            { id: "p10", platform: "X (Twitter)", user: "@bintaro_updates", kecamatan: "Pondok Aren", text: "Viral fenomena pocong di Tangsel membuktikan netizen kita gampang kena rumor tanpa cek fakta awal. Lucu aja diseriusin.", sentiment: "Skeptis / Lucu", engagement: 1560, date: "2026-03-04" },
+            { id: "p11", platform: "TikTok", user: "@pamulang_boy", kecamatan: "Pamulang", text: "Ronda malam di Pamulang 2 diperketat bukan karena pocong asli, tapi takut ada maling manfaatin isu pocong buat kamuflase.", sentiment: "Geram / Marah", engagement: 1890, date: "2026-03-04" },
+            { id: "p12", platform: "Instagram", user: "@tangsel.headline", kecamatan: "Ciputat", text: "Sosiolog sebut fenomena heboh pocong di Tangsel adalah bagian dari kepanikan kolektif (mass hysteria) lewat algoritma FYP TikTok.", sentiment: "Penasaran / Investigatif", engagement: 3100, date: "2026-03-04" },
+            { id: "p13", platform: "Facebook", user: "@warga_setu", kecamatan: "Setu", text: "Anak-anak muda Setu malah sengaja nongkrong sampai jam 2 pagi nyari pocongnya, bukannya takut malah dijadiin wahana uji nyali gratis.", sentiment: "Skeptis / Lucu", engagement: 790, date: "2026-03-04" },
+            { id: "p14", platform: "X (Twitter)", user: "@pamulang_fyi", kecamatan: "Pamulang", text: "Ibu-ibu kompleks jalan Reny Jaya Pamulang resah anak-anaknya ga mau tidur sendiri karena ketakutan berita pocong di TikTok.", sentiment: "Resah / Takut", engagement: 920, date: "2026-03-04" },
+            { id: "p15", platform: "Instagram", user: "@serpong_today", kecamatan: "Serpong Utara", text: "Polres Tangsel ingatkan pembuat konten prank pocong yang meresahkan warga bisa dijerat UU ITE pasal keonaran publik.", sentiment: "Geram / Marah", engagement: 4500, date: "2026-03-04" }
+        ];
+
+        let currentDataset = [...SAMPLE_TANGSEL_DATA];
+        let filteredDataset = [...SAMPLE_TANGSEL_DATA];
+        let apifyToken = "apify_api_LWBnBSP4QDcRfrhPf9t4AN3slLlk";
+        let currentPage = 1;
+        const rowsPerPage = 5;
+
+        // Chart instances
+        let pieChartInstance = null;
+        let barChartInstance = null;
+        let doughnutChartInstance = null;
+        let leafletMap = null;
+        let mapMarkers = [];
+
+        const TANGSEL_COORDS = {
+            "Pamulang": { lat: -6.3421, lng: 106.7382 },
+            "Serpong": { lat: -6.3202, lng: 106.6821 },
+            "Serpong Utara": { lat: -6.2483, lng: 106.6575 },
+            "Ciputat": { lat: -6.3117, lng: 106.7485 },
+            "Ciputat Timur": { lat: -6.3031, lng: 106.7621 },
+            "Pondok Aren": { lat: -6.2647, lng: 106.7032 },
+            "Setu": { lat: -6.3478, lng: 106.6711 }
+        };
+
+        function showToast(message, type = "info") {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto px-4 py-3 rounded-xl border text-xs font-medium shadow-xl flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0 ${
+                type === 'success' ? 'bg-emerald-950 border-emerald-500/50 text-emerald-200' :
+                type === 'error' ? 'bg-red-950 border-red-500/50 text-red-200' :
+                'bg-slate-900 border-purple-500/50 text-purple-200'
+            }`;
+            
+            const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            setupEventListeners();
+            refreshDashboard();
+        });
+
+        function initMap() {
+            // Centered on Tangsel
+            leafletMap = L.map('tangselMap', {
+                zoomControl: false
+            }).setView([-6.305, 106.712], 12);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+                maxZoom: 18
+            }).addTo(leafletMap);
+
+            L.control.zoom({ position: 'topright' }).addTo(leafletMap);
+        }
+
+        function updateMapMarkers() {
+            mapMarkers.forEach(m => leafletMap.removeLayer(m));
+            mapMarkers = [];
+
+            const districtStats = {};
+            Object.keys(TANGSEL_COORDS).forEach(d => districtStats[d] = { count: 0, resah: 0 });
+
+            filteredDataset.forEach(item => {
+                if (districtStats[item.kecamatan]) {
+                    districtStats[item.kecamatan].count++;
+                    if (item.sentiment === "Resah / Takut" || item.sentiment === "Geram / Marah") {
+                        districtStats[item.kecamatan].resah++;
+                    }
+                }
+            });
+
+            Object.entries(TANGSEL_COORDS).forEach(([district, coords]) => {
+                const stat = districtStats[district];
+                const count = stat ? stat.count : 0;
+                
+                // Color scale based on reaction count
+                let markerColor = "#3b82f6"; // blue
+                if (count > 4) markerColor = "#ef4444"; // red
+                else if (count > 2) markerColor = "#a855f7"; // purple
+
+                const customIcon = L.divIcon({
+                    className: 'custom-map-pin',
+                    html: `<div style="background-color: ${markerColor};" class="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg border-2 border-slate-900 glow-effect">
+                            ${count}
+                           </div>`,
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 14]
+                });
+
+                const marker = L.marker([coords.lat, coords.lng], { icon: customIcon }).addTo(leafletMap);
+                marker.bindPopup(`
+                    <div class="text-xs font-sans text-slate-900 p-1">
+                        <strong class="text-sm font-bold">${district}</strong><br>
+                        Total Tanggapan: <b>${count}</b><br>
+                        Tingkat Keresahan: <b>${stat ? stat.resah : 0}</b> postingan
+                    </div>
+                `);
+                mapMarkers.push(marker);
+            });
+        }
+
+        function setupEventListeners() {
+            // Filter changes
+            document.getElementById('filterPlatform').addEventListener('change', applyFilters);
+            document.getElementById('filterSentiment').addEventListener('change', applyFilters);
+            document.getElementById('filterDistrict').addEventListener('change', applyFilters);
+            document.getElementById('searchTableInput').addEventListener('input', applyFilters);
+
+            document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+                document.getElementById('filterPlatform').value = "ALL";
+                document.getElementById('filterSentiment').value = "ALL";
+                document.getElementById('filterDistrict').value = "ALL";
+                document.getElementById('searchTableInput').value = "";
+                applyFilters();
+                showToast("Filter berhasil direset", "info");
+            });
+
+            // Apify Modal
+            document.getElementById('openApiModalBtn').addEventListener('click', () => {
+                document.getElementById('apifyModal').classList.remove('hidden');
+            });
+            document.getElementById('closeApiModalBtn').addEventListener('click', () => {
+                document.getElementById('apifyModal').classList.add('hidden');
+            });
+
+            document.getElementById('fetchApifyBtn').addEventListener('click', fetchApifyData);
+            document.getElementById('usePresetDatasetBtn').addEventListener('click', () => {
+                currentDataset = [...SAMPLE_TANGSEL_DATA];
+                applyFilters();
+                document.getElementById('apifyModal').classList.add('hidden');
+                showToast("Berhasil memuat Data Demo Tangsel", "success");
+            });
+
+            // Gemini AI Analysis
+            document.getElementById('aiAnalyzeBtn').addEventListener('click', triggerGeminiAnalysis);
+            document.getElementById('closeAiAnalysisBtn').addEventListener('click', () => {
+                document.getElementById('aiAnalysisContainer').classList.add('hidden');
+            });
+            document.getElementById('sendAiQueryBtn').addEventListener('click', handleCustomAiQuery);
+
+            // Export CSV
+            document.getElementById('exportCsvBtn').addEventListener('click', exportToCsv);
+        }
+
+        function applyFilters() {
+            const platform = document.getElementById('filterPlatform').value;
+            const sentiment = document.getElementById('filterSentiment').value;
+            const district = document.getElementById('filterDistrict').value;
+            const search = document.getElementById('searchTableInput').value.toLowerCase().trim();
+
+            filteredDataset = currentDataset.filter(item => {
+                const matchPlatform = platform === "ALL" || item.platform === platform;
+                const matchSentiment = sentiment === "ALL" || item.sentiment === sentiment;
+                const matchDistrict = district === "ALL" || item.kecamatan === district;
+                const matchSearch = search === "" || 
+                    item.text.toLowerCase().includes(search) || 
+                    item.user.toLowerCase().includes(search) || 
+                    item.kecamatan.toLowerCase().includes(search);
+
+                return matchPlatform && matchSentiment && matchDistrict && matchSearch;
+            });
+
+            currentPage = 1;
+            refreshDashboard();
+        }
+
+        function refreshDashboard() {
+            updateKPIs();
+            renderCharts();
+            updateMapMarkers();
+            renderTable();
+        }
+
+        function updateKPIs() {
+            const total = filteredDataset.length;
+            document.getElementById('kpiTotalPosts').innerText = total;
+
+            // Sentiment Counts
+            const sentimentCounts = {};
+            let maxSentiment = "-";
+            let maxSentCount = 0;
+
+            const districtCounts = {};
+            let maxDistrict = "-";
+            let maxDistCount = 0;
+
+            let totalEngagement = 0;
+
+            filteredDataset.forEach(item => {
+                // Sentiment
+                sentimentCounts[item.sentiment] = (sentimentCounts[item.sentiment] || 0) + 1;
+                if (sentimentCounts[item.sentiment] > maxSentCount) {
+                    maxSentCount = sentimentCounts[item.sentiment];
+                    maxSentiment = item.sentiment;
+                }
+
+                // District
+                districtCounts[item.kecamatan] = (districtCounts[item.kecamatan] || 0) + 1;
+                if (districtCounts[item.kecamatan] > maxDistCount) {
+                    maxDistCount = districtCounts[item.kecamatan];
+                    maxDistrict = item.kecamatan;
+                }
+
+                // Engagement
+                totalEngagement += (item.engagement || 0);
+            });
+
+            document.getElementById('kpiDominantSentiment').innerText = maxSentiment;
+            document.getElementById('kpiSentimentSub').innerText = total > 0 ? `${Math.round((maxSentCount/total)*100)}% dari tanggapan` : 'Masyarakat Tangsel';
+            document.getElementById('kpiHotspotDistrict').innerText = maxDistrict;
+            document.getElementById('kpiEngagement').innerText = totalEngagement.toLocaleString('id-ID');
+        }
+
+        function renderCharts() {
+            // 1. Sentiment Pie Chart
+            const sentimentData = {
+                "Resah / Takut": 0,
+                "Skeptis / Lucu": 0,
+                "Penasaran / Investigatif": 0,
+                "Geram / Marah": 0
+            };
+
+            filteredDataset.forEach(item => {
+                if (sentimentData[item.sentiment] !== undefined) {
+                    sentimentData[item.sentiment]++;
+                } else {
+                    sentimentData[item.sentiment] = (sentimentData[item.sentiment] || 0) + 1;
+                }
+            });
+
+            const pieCtx = document.getElementById('sentimentPieChart').getContext('2d');
+            if (pieChartInstance) pieChartInstance.destroy();
+
+            pieChartInstance = new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(sentimentData),
+                    datasets: [{
+                        data: Object.values(sentimentData),
+                        backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#a855f7'],
+                        borderWidth: 2,
+                        borderColor: '#0f172a'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    cutout: '68%'
+                }
+            });
+
+            // Update custom legend
+            const legendContainer = document.getElementById('sentimentLegend');
+            legendContainer.innerHTML = '';
+            const colors = { "Resah / Takut": "bg-red-500", "Skeptis / Lucu": "bg-amber-500", "Penasaran / Investigatif": "bg-blue-500", "Geram / Marah": "bg-purple-500" };
+            Object.entries(sentimentData).forEach(([lbl, count]) => {
+                const colorClass = colors[lbl] || "bg-slate-500";
+                legendContainer.innerHTML += `
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full ${colorClass}"></span>
+                        <span class="text-[11px] text-slate-300 truncate">${lbl}: <b>${count}</b></span>
+                    </div>
+                `;
+            });
+
+            // 2. District Bar Chart
+            const districts = ["Pamulang", "Serpong", "Serpong Utara", "Ciputat", "Ciputat Timur", "Pondok Aren", "Setu"];
+            const districtCounts = districts.map(d => filteredDataset.filter(i => i.kecamatan === d).length);
+
+            const barCtx = document.getElementById('districtBarChart').getContext('2d');
+            if (barChartInstance) barChartInstance.destroy();
+
+            barChartInstance = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: districts,
+                    datasets: [{
+                        label: 'Jumlah Postingan',
+                        data: districtCounts,
+                        backgroundColor: 'rgba(34, 197, 94, 0.7)',
+                        borderColor: '#22c55e',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#94a3b8', stepSize: 1 },
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' }
+                        },
+                        x: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+
+            // 3. Platform Distribution Chart
+            const platformCounts = { "TikTok": 0, "X (Twitter)": 0, "Instagram": 0, "Facebook": 0 };
+            filteredDataset.forEach(i => {
+                if (platformCounts[i.platform] !== undefined) platformCounts[i.platform]++;
+            });
+
+            const doughCtx = document.getElementById('platformDoughnutChart').getContext('2d');
+            if (doughnutChartInstance) doughnutChartInstance.destroy();
+
+            doughnutChartInstance = new Chart(doughCtx, {
+                type: 'polarArea',
+                data: {
+                    labels: Object.keys(platformCounts),
+                    datasets: [{
+                        data: Object.values(platformCounts),
+                        backgroundColor: [
+                            'rgba(236, 72, 153, 0.7)',
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(168, 85, 247, 0.7)',
+                            'rgba(34, 197, 94, 0.7)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { r: { ticks: { display: false }, grid: { color: 'rgba(51, 65, 85, 0.3)' } } }
+                }
+            });
+
+            // Platform List Text
+            const pList = document.getElementById('platformList');
+            pList.innerHTML = '';
+            Object.entries(platformCounts).forEach(([plat, val]) => {
+                pList.innerHTML += `
+                    <div class="flex items-center justify-between text-slate-300">
+                        <span>${plat}</span>
+                        <span class="font-bold bg-slate-800 px-2 py-0.5 rounded text-[10px] text-emerald-400">${val} post</span>
+                    </div>
+                `;
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+
+            if (filteredDataset.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-8 text-center text-slate-500">
+                            Tidak ditemukan data yang sesuai dengan kriteria filter.
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('paginationInfo').innerText = "Menampilkan 0 data";
+                document.getElementById('paginationControls').innerHTML = '';
+                return;
+            }
+
+            const totalItems = filteredDataset.length;
+            const totalPages = Math.ceil(totalItems / rowsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const pageData = filteredDataset.slice(startIndex, startIndex + rowsPerPage);
+
+            pageData.forEach(item => {
+                let badgeClass = "bg-slate-800 text-slate-300";
+                if (item.sentiment === "Resah / Takut") badgeClass = "bg-red-500/10 text-red-400 border border-red-500/30";
+                else if (item.sentiment === "Skeptis / Lucu") badgeClass = "bg-amber-500/10 text-amber-400 border border-amber-500/30";
+                else if (item.sentiment === "Penasaran / Investigatif") badgeClass = "bg-blue-500/10 text-blue-400 border border-blue-500/30";
+                else if (item.sentiment === "Geram / Marah") badgeClass = "bg-purple-500/10 text-purple-400 border border-purple-500/30";
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="py-3 px-4 font-medium text-white flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full ${item.platform === 'TikTok' ? 'bg-pink-500' : item.platform.includes('Twitter') ? 'bg-blue-400' : 'bg-purple-500'}"></span>
+                            <div>
+                                <p class="font-semibold">${item.user}</p>
+                                <p class="text-[10px] text-slate-400">${item.platform}</p>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4 text-slate-300">
+                            <span class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded text-[11px] border border-slate-700">${item.kecamatan}</span>
+                        </td>
+                        <td class="py-3 px-4 max-w-xs truncate text-slate-200" title="${item.text}">
+                            ${item.text}
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-semibold ${badgeClass}">
+                                ${item.sentiment}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 font-mono text-emerald-400">
+                            ${(item.engagement || 0).toLocaleString('id-ID')}
+                        </td>
+                        <td class="py-3 px-4 text-slate-400 text-[11px]">
+                            ${item.date}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // Pagination info
+            document.getElementById('paginationInfo').innerText = `Menampilkan ${startIndex + 1} - ${Math.min(startIndex + rowsPerPage, totalItems)} dari ${totalItems} data`;
+
+            // Pagination Controls
+            const controls = document.getElementById('paginationControls');
+            controls.innerHTML = '';
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.className = `px-2.5 py-1 rounded-lg text-xs font-medium border transition ${i === currentPage ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'}`;
+                btn.innerText = i;
+                btn.addEventListener('click', () => {
+                    currentPage = i;
+                    renderTable();
+                });
+                controls.appendChild(btn);
+            }
+        }
+
+        async function fetchApifyData() {
+            const token = document.getElementById('apifyTokenInput').value.trim();
+            const datasetId = document.getElementById('apifyDatasetIdInput').value.trim();
+
+            if (!datasetId) {
+                showToast("Silakan masukkan Dataset ID Apify terlebih dahulu!", "error");
+                return;
+            }
+
+            const fetchBtn = document.getElementById('fetchApifyBtn');
+            fetchBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Mengambil Data...`;
+            fetchBtn.disabled = true;
+
+            try {
+                const url = `https://api.apify.com/v2/datasets/${datasetId}/items?token=${token}&limit=100`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+
+                const rawItems = await response.json();
+
+                if (!Array.isArray(rawItems) || rawItems.length === 0) {
+                    showToast("Dataset kosong atau tidak ditemukan.", "error");
+                    return;
+                }
+
+                // Map Apify raw items to structured app items
+                const kecamatanList = ["Pamulang", "Serpong", "Serpong Utara", "Ciputat", "Ciputat Timur", "Pondok Aren", "Setu"];
+                currentDataset = rawItems.map((item, idx) => {
+                    const textContent = item.text || item.comment || item.caption || item.fullText || JSON.stringify(item);
+                    
+                    // Simple sentiment categorization
+                    let sentiment = "Penasaran / Investigatif";
+                    const lower = textContent.toLowerCase();
+                    if (lower.includes("takut") || lower.includes("seram") || lower.includes("resah") || lower.includes("merinding")) {
+                        sentiment = "Resah / Takut";
+                    } else if (lower.includes("hoax") || lower.includes("lucu") || lower.includes("bohong") || lower.includes("prank") || lower.includes("ngakak")) {
+                        sentiment = "Skeptis / Lucu";
+                    } else if (lower.includes("marah") || lower.includes("geram") || lower.includes("bahaya")) {
+                        sentiment = "Geram / Marah";
+                    }
+
+                    // Randomly assign Tangsel kecamatan if absent in dataset
+                    const matchedKec = kecamatanList.find(k => lower.includes(k.toLowerCase())) || kecamatanList[idx % kecamatanList.length];
+
+                    return {
+                        id: item.id || `apify_${idx}`,
+                        platform: item.platform || (item.url && item.url.includes("twitter") ? "X (Twitter)" : "TikTok"),
+                        user: item.authorUsername || item.username || `@user_tangsel_${idx+1}`,
+                        kecamatan: matchedKec,
+                        text: textContent,
+                        sentiment: sentiment,
+                        engagement: item.likesCount || item.diggCount || Math.floor(Math.random() * 800) + 50,
+                        date: item.createdAt ? item.createdAt.split("T")[0] : new Date().toISOString().split("T")[0]
+                    };
+                });
+
+                applyFilters();
+                document.getElementById('apifyModal').classList.add('hidden');
+                showToast(`Berhasil mengambil ${currentDataset.length} data dari Apify!`, "success");
+
+            } catch (err) {
+                console.error(err);
+                showToast(`Gagal mengambil data: ${err.message}`, "error");
+            } finally {
+                fetchBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-down"></i> Ambil Data Apify`;
+                fetchBtn.disabled = false;
+            }
+        }
+
+        async function triggerGeminiAnalysis() {
+            const container = document.getElementById('aiAnalysisContainer');
+            const loading = document.getElementById('aiAnalysisLoading');
+            const resultDiv = document.getElementById('aiAnalysisResult');
+
+            container.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            loading.classList.add('flex');
+            resultDiv.innerHTML = '';
+
+            const promptText = `
+Anda adalah Pakar Psikologi Sosial & Analyst Media Sosial Tangerang Selatan.
+Berikut adalah ringkasan data tanggapan masyarakat terhadap isu fenomena Pocong di Tangerang Selatan:
+- Total Sampel Data: ${filteredDataset.length}
+- Data Komentar/Post: ${JSON.stringify(filteredDataset.slice(0, 10))}
+
+Tolong berikan laporan analisis singkat dalam Bahasa Indonesia dengan format rapi (3 poin):
+1. **Analisis Tren Sentimen Publik**: Mengapa isu ini heboh dan bagaimana psikologi warga Tangsel (apakah takut, skeptis, atau marah karena prank).
+2. **Kecamatan Paling Terdampak & Risiko Keamanan**: Bagaimana isu ini memengaruhi aktivitas warga (misal ronda malam, rasa aman di jalan).
+3. **Rekomendasi Penanganan untuk Pihak Berwenang**: Langkah untuk Polsek/Satpol PP/Tokoh Masyarakat Tangsel.
+            `;
+
+            try {
+                const apiKey = ""; // Canvas runtime automatically supplies the API key when left empty
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: promptText }] }]
+                    })
+                });
+
+                const data = await response.json();
+                const aiResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (aiResponseText) {
+                    // Simple Markdown formatting
+                    const formatted = aiResponseText
+                        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-purple-300 font-semibold">$1</strong>')
+                        .replace(/\n\n/g, '<br><br>');
+                    resultDiv.innerHTML = `<div class="bg-slate-900/80 p-4 rounded-xl border border-purple-900/40">${formatted}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<p class="text-red-400">Gagal mendapatkan respon dari AI.</p>`;
+                }
+            } catch (err) {
+                console.error(err);
+                resultDiv.innerHTML = `<p class="text-red-400">Terjadi kesalahan koneksi ke AI API.</p>`;
+            } finally {
+                loading.classList.add('hidden');
+                loading.classList.remove('flex');
+            }
+        }
+
+        async function handleCustomAiQuery() {
+            const queryInput = document.getElementById('aiCustomQuery');
+            const userQuery = queryInput.value.trim();
+            if (!userQuery) return;
+
+            const resultDiv = document.getElementById('aiAnalysisResult');
+            const sendBtn = document.getElementById('sendAiQueryBtn');
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i>`;
+
+            const promptText = `
+Context: Dataset tanggapan fenomena Pocong Tangerang Selatan (${filteredDataset.length} postingan).
+Pertanyaan Pengguna: "${userQuery}"
+Jawablah secara singkat, objektif, dan faktual berdasarkan sentimen publik warga Tangsel.
+            `;
+
+            try {
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: promptText }] }]
+                    })
+                });
+
+                const data = await response.json();
+                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (aiText) {
+                    const formatted = aiText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    resultDiv.innerHTML += `
+                        <div class="mt-3 bg-purple-900/30 p-3 rounded-xl border border-purple-700/40">
+                            <p class="text-xs text-purple-300 font-semibold mb-1"><i class="fa-solid fa-circle-question"></i> Q: ${userQuery}</p>
+                            <p class="text-xs text-slate-200">${formatted}</p>
+                        </div>
+                    `;
+                    queryInput.value = '';
+                }
+            } catch (err) {
+                showToast("Gagal memproses pertanyaan", "error");
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = `<i class="fa-solid fa-paper-plane mr-1"></i> Tanya`;
+            }
+        }
+
+        function exportToCsv() {
+            if (filteredDataset.length === 0) {
+                showToast("Tidak ada data untuk diexport", "error");
+                return;
+            }
+
+            const headers = ["ID", "Platform", "Pengguna", "Kecamatan", "Komentar", "Sentimen", "Engagement", "Tanggal"];
+            const rows = filteredDataset.map(item => [
+                item.id,
+                `"${item.platform}"`,
+                `"${item.user}"`,
+                `"${item.kecamatan}"`,
+                `"${item.text.replace(/"/g, '""')}"`,
+                `"${item.sentiment}"`,
+                item.engagement,
+                item.date
+            ]);
+
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `statistik_pocong_tangsel_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast("File CSV berhasil diunduh!", "success");
+        }
+    </script>
+</body>
+</html>
